@@ -7,6 +7,10 @@ interface LoginScreenProps {
   onLogin: (name: string, username: string) => void;
 }
 
+// ✅ Read base URL from Vite env (falls back to localhost for safety)
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+
 const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
@@ -15,45 +19,44 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
- const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setIsLoading(true);
-  setError('');
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
 
-  try {
-    const response = await fetch('http://localhost:8080/api/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        username,
-        password,
-      }),
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username,
+          password,
+        }),
+      });
 
-    if (!response.ok) {
-      const data = await response.json().catch(() => null);
-      setError(data?.message || 'Invalid username or password.');
-      return;
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        setError(data?.message || 'Invalid username or password.');
+        return;
+      }
+
+      const data = await response.json();
+      // data = { token, username, name }
+
+      // ✅ Save JWT token for future API calls
+      localStorage.setItem('token', data.token);
+
+      // ✅ Tell App that login succeeded (App will set isAuthenticated & userInfo)
+      onLogin(data.name, data.username);
+    } catch (err) {
+      console.error(err);
+      setError('Unable to reach server. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
-
-    const data = await response.json();
-    // data = { token, username, name }
-
-    // ✅ Save JWT token for future API calls
-    localStorage.setItem('token', data.token);
-
-    // ✅ Tell App that login succeeded (App will set isAuthenticated & userInfo)
-    onLogin(data.name, data.username);
-  } catch (err) {
-    console.error(err);
-    setError('Unable to reach server. Please try again.');
-  } finally {
-    setIsLoading(false);
-  }
-};
-
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4 transition-colors">
@@ -68,13 +71,20 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             <div className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center mb-4">
               <Lock className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Study Tracker Pro</h1>
-            <p className="text-gray-600 dark:text-gray-300">Secure access to your study dashboard</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+              Study Tracker Pro
+            </h1>
+            <p className="text-gray-600 dark:text-gray-300">
+              Secure access to your study dashboard
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 Full Name
               </label>
               <div className="relative">
@@ -94,7 +104,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             </div>
 
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label
+                htmlFor="username"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 Username
               </label>
               <div className="relative">
@@ -114,7 +127,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 Password
               </label>
               <div className="relative">

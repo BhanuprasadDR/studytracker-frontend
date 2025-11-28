@@ -28,6 +28,10 @@ interface DashboardProps {
   onLogout: () => void;
 }
 
+// ✅ Same pattern as LoginScreen: read base URL from env
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+
 const Dashboard: React.FC<DashboardProps> = ({ userInfo, onLogout }) => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -86,14 +90,14 @@ const Dashboard: React.FC<DashboardProps> = ({ userInfo, onLogout }) => {
     }
   }, [showSettings, settings]);
 
-  // Load study data from backend on first mount
+  // 🔁 Load study data from backend on first mount
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) return;
 
     const loadData = async () => {
       try {
-        const response = await fetch('http://localhost:8080/api/study/data', {
+        const response = await fetch(`${API_BASE_URL}/api/study/data`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -180,7 +184,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userInfo, onLogout }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Auto-save study data to backend whenever it changes
+  // 🔁 Auto-save study data to backend whenever it changes
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) return;
@@ -228,7 +232,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userInfo, onLogout }) => {
         },
       };
 
-      fetch('http://localhost:8080/api/study/data', {
+      fetch(`${API_BASE_URL}/api/study/data`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
